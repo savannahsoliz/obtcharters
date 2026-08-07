@@ -84,7 +84,10 @@ if (statsStrip && statNumbers.length) {
 const selectedDateInput = document.getElementById('reserve-selected-date');
 const tripRequestForm = document.getElementById('trip-request-form');
 const successMessage = document.getElementById('trip-request-success');
-const calendarButtons = document.querySelectorAll('.calendar-day');
+const calendarGrid = document.getElementById('calendar-grid');
+const calendarMonthLabel = document.querySelector('.reserve-calendar-month');
+const calendarPrevButton = document.getElementById('calendar-prev');
+const calendarNextButton = document.getElementById('calendar-next');
 const EMAILJS_PUBLIC_KEY = 'pAVuz1cvrL_PD7ZPs';
 const EMAILJS_SERVICE_ID = 'service_nyzxf5j';
 const EMAILJS_TEMPLATE_ID = 'template_0d9axbo';
@@ -94,14 +97,89 @@ if (typeof window.emailjs !== 'undefined') {
   window.emailjs.init(EMAILJS_PUBLIC_KEY);
 }
 
-calendarButtons.forEach((button) => {
-  button.addEventListener('click', () => {
-    if (selectedDateInput) {
-      selectedDateInput.value = button.getAttribute('data-date');
-    }
-    document.querySelectorAll('.calendar-day').forEach((day) => day.classList.remove('selected'));
-    button.classList.add('selected');
+const setSelectedCalendarDay = (button) => {
+  const dateValue = button.getAttribute('data-date') || '';
+
+  if (selectedDateInput) {
+    selectedDateInput.value = dateValue;
+  }
+
+  document.querySelectorAll('.calendar-day').forEach((day) => {
+    day.classList.remove('selected');
+    day.setAttribute('aria-pressed', 'false');
   });
+
+  if (dateValue) {
+    button.classList.add('selected');
+    button.setAttribute('aria-pressed', 'true');
+  }
+};
+
+let calendarViewDate = new Date(2026, 7, 1);
+
+const renderCalendar = () => {
+  if (!calendarGrid) {
+    return;
+  }
+
+  const year = calendarViewDate.getFullYear();
+  const month = calendarViewDate.getMonth();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthName = calendarViewDate.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
+
+  if (calendarMonthLabel) {
+    calendarMonthLabel.textContent = monthName;
+  }
+
+  calendarGrid.innerHTML = '';
+
+  for (let slot = 0; slot < firstDayOfMonth; slot += 1) {
+    const emptyCell = document.createElement('div');
+    emptyCell.className = 'calendar-day muted';
+    emptyCell.setAttribute('aria-hidden', 'true');
+    calendarGrid.appendChild(emptyCell);
+  }
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const button = document.createElement('button');
+    const dateValue = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+    button.type = 'button';
+    button.className = 'calendar-day available';
+    button.textContent = String(day);
+    button.setAttribute('data-date', dateValue);
+    button.setAttribute('aria-label', `Select ${dateValue}`);
+    button.setAttribute('aria-pressed', 'false');
+
+    button.addEventListener('click', () => {
+      setSelectedCalendarDay(button);
+    });
+
+    calendarGrid.appendChild(button);
+  }
+};
+
+const changeCalendarMonth = (direction) => {
+  calendarViewDate = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + direction, 1);
+  renderCalendar();
+};
+
+calendarPrevButton?.addEventListener('click', () => changeCalendarMonth(-1));
+calendarNextButton?.addEventListener('click', () => changeCalendarMonth(1));
+
+renderCalendar();
+
+calendarGrid?.addEventListener('click', (event) => {
+  const button = event.target.closest('.calendar-day.available');
+  if (!button) {
+    return;
+  }
+
+  setSelectedCalendarDay(button);
 });
 
 if (tripRequestForm) {
@@ -110,15 +188,13 @@ if (tripRequestForm) {
 
     const formData = new FormData(tripRequestForm);
     const templateParams = {
-      to_email: OWNER_EMAIL,
-      reply_to: formData.get('email') || '',
-      name: formData.get('name') || '',
-      email: formData.get('email') || '',
-      phone: formData.get('phone') || '',
-      preferred_trip_date: formData.get('selectedDate') || '',
-      number_of_people: formData.get('people') || '',
-      trip_type: formData.get('tripType') || '',
-      comments: formData.get('comments') || '',
+  name: formData.get('name') || '',
+  email: formData.get('email') || '',
+  phone: formData.get('phone') || '',
+  people: formData.get('people') || '',
+  tripType: formData.get('tripType') || '',
+  selectedDate: formData.get('selectedDate') || '',
+  comments: formData.get('comments') || '',
     };
 
     const submitButton = tripRequestForm.querySelector('button[type="submit"]');
