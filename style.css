@@ -123,7 +123,44 @@ img {
   min-height: 78vh;
   display: flex;
   align-items: center;
-  background: url("images/2572E45B-73EB-4DE1-8D67-81D20F5DC6CB.png") center 65%/cover no-repeat;
+  background-color: var(--navy);
+  background-image: url("images/2572E45B-73EB-4DE1-8D67-81D20F5DC6CB.png");
+  background-position: center 65%;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    min-height: 72svh;
+    background-position: center center;
+    background-size: contain;
+    background-color: #071a2f;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    min-height: 68svh;
+    background-position: center top;
+    background-size: cover;
+  }
+
+  .hero-content {
+    padding: 6.5rem 0 2.6rem;
+    margin-left: 0;
+    margin-right: 0;
+    max-width: 100%;
+  }
+
+  .hero-actions {
+    gap: 0.75rem;
+  }
+
+  .btn {
+    min-height: 46px;
+    padding: 0.75rem 1.2rem;
+  }
 }
 
 .hero-overlay {
